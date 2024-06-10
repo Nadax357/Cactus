@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :myapp, Myapp.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "dragon",
   hostname: "localhost",
   database: "myapp_dev",
   stacktrace: true,
