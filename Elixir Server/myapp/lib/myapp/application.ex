@@ -16,6 +16,7 @@ defmodule Myapp.Application do
       {Finch, name: Myapp.Finch},
       # Start a worker by calling: Myapp.Worker.start_link(arg)
       # {Myapp.Worker, arg},
+      Myapp.DataFetcher,
       # Start to serve requests, typically the last entry
       MyappWeb.Endpoint
     ]
