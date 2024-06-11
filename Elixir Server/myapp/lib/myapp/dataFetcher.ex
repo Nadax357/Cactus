@@ -1,5 +1,6 @@
 defmodule Myapp.DataFetcher do
   use GenServer
+  alias Phoenix.PubSub
 
   @interval :timer.seconds(10)
 
@@ -27,10 +28,14 @@ defmodule Myapp.DataFetcher do
 
     case HTTPoison.get(url) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        IO.puts("Data fetched: #{body}")
+        case Jason.decode(body) do
+          {:ok, json} ->
+            PubSub.broadcast(Myapp.PubSub, "metrics:lobby", %{event: "new_data", payload: json})
+          {:error, error} ->
+            IO.puts("Error decoding JSON: #{error}")
+        end
       {:ok, %HTTPoison.Response{status_code: status_code}} ->
         IO.puts("Received unexpected status code: #{status_code}")
-
       {:error, %HTTPoison.Error{reason: reason}} ->
         IO.puts("HTTP request error: #{reason}")
     end

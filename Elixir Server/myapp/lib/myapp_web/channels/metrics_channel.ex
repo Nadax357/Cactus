@@ -25,7 +25,12 @@ defmodule MyappWeb.MetricsChannel do
     {:noreply, socket}
   end
 
-  # Add authorization logic here as required.
+  def handle_info(%{event: "new_data", payload: data}, socket) do
+    push(socket, "new_data", data)
+    {:noreply, socket}
+  end
+
+    # Add authorization logic here as required.
   defp authorized?(_payload) do
     true
   end
