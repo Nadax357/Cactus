@@ -2,7 +2,7 @@ defmodule Myapp.DataFetcher do
   use GenServer
   alias Phoenix.PubSub
 
-  @interval :timer.seconds(10)
+  @interval :timer.seconds(3)
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)

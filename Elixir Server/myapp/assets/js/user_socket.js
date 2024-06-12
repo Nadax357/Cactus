@@ -1,5 +1,6 @@
 // NOTE: The contents of this file will only be executed if
 // you uncomment its entry in "assets/js/app.js".
+import Chart from "../assets/node_modules/chart.js/auto"
 
 // Bring in Phoenix channels client library:
 import {Socket} from "phoenix"
@@ -59,9 +60,102 @@ socket.connect()
 let channel = socket.channel("metrics:lobby", {})
 channel.on("new_data", payload => {
   console.log("Received new data:", payload)
+  updateChart(payload['cpu_usage'], cpuUsageChart)
+  updateChart(payload['memory_usage'], memoryUsageChart)
+  updateChart(payload['cpu_temperature'], cpuTemperatureChart)
 })
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
 
 export default socket
+
+// Setup Chart.js
+Chart.defaults.font.size = 16;
+let cpuUsageCanvas = document.getElementById('cpuChart').getContext('2d')
+let memoryUsageCanvas = document.getElementById('memoryChart').getContext('2d')
+let cpuTemperatureCanvas = document.getElementById('cpuTemperatureChart').getContext('2d')
+let cpuUsageChart = new Chart(cpuUsageCanvas, {
+  type: 'line', // Change to the type of chart you need
+  data: {
+    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    datasets: [{
+      label: 'Cpu Usage %',
+      data: [], // Initialize with empty data
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+      }
+    }
+  }
+})
+
+let memoryUsageChart = new Chart(memoryUsageCanvas, {
+  type: 'line', // Change to the type of chart you need
+  data: {
+    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    datasets: [{
+      label: 'Memory Usage %',
+      data: [], // Initialize with empty data
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100
+      }
+    }
+  }
+})
+
+let cpuTemperatureChart = new Chart(cpuTemperatureCanvas, {
+  type: 'line', // Change to the type of chart you need
+  data: {
+    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    datasets: [{
+      label: 'CPU Temperature C°',
+      data: [], // Initialize with empty data
+      backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      borderColor: 'rgba(75, 192, 192, 1)',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        suggestedMax: 100
+      }
+    }
+  }
+})
+
+// Function to update chart with new data
+function updateChart(newData, chart) {
+  let data = chart.data.datasets[0].data
+  data.push(newData)
+  if(data.length > 10) {
+    data.shift()
+  }
+  chart.update()
+}
+
+class circularChart extends Chart.DoughnutController {
+  draw() {
+    super.draw(arguments);
+  }
+}

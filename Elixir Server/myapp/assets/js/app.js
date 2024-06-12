@@ -14,6 +14,7 @@ import "./user_socket.js"
 //
 //     import "some-package"
 //
+// "../assets/node_module/charts.js"
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
