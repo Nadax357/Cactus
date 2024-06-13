@@ -1,6 +1,6 @@
 // NOTE: The contents of this file will only be executed if
 // you uncomment its entry in "assets/js/app.js".
-import Chart from "../assets/node_modules/chart.js/auto"
+import {Chart, DoughnutController} from "../assets/node_modules/chart.js/auto"
 
 // Bring in Phoenix channels client library:
 import {Socket} from "phoenix"
@@ -63,6 +63,9 @@ channel.on("new_data", payload => {
   updateChart(payload['cpu_usage'], cpuUsageChart)
   updateChart(payload['memory_usage'], memoryUsageChart)
   updateChart(payload['cpu_temperature'], cpuTemperatureChart)
+  updateGauge(payload['cpu_usage'], cpuUsageGauge)
+  updateGauge(payload['memory_usage'], memoryUsageGauge)
+  updateGauge(payload['cpu_temperature'], cpuTemperatureGauge)
 })
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
@@ -70,18 +73,61 @@ channel.join()
 
 export default socket
 
+class gaugeChart extends DoughnutController {
+  draw() {
+    super.draw(arguments);
+    const { ctx, data, chartArea: { top, bottom, left, right, width, height } } = this.chart;
+    const value = data.datasets[0].data[0]+data.datasets[0].unit || '';
+
+    ctx.save();
+    ctx.font = 'bold 150px sans-serif';
+    ctx.fillStyle = data.datasets[0].backgroundColor[0]
+    ctx.textAlign = 'center';
+    ctx.fillText(value, width / 2, bottom-100)
+  }
+}
+
+// Create gauge chart
+gaugeChart.id = 'gauge';
+gaugeChart.defaults = DoughnutController.defaults;
+gaugeChart.defaults = {
+  animation: {
+    animateRotate: false
+  },
+  cutout: '75%',
+  circumference: 180,
+  rotation: 270,
+};
+console.log(gaugeChart.overrides);
+gaugeChart.overrides = {
+  aspectRatio: 1.5,
+  plugins: {
+    legend: {
+      display: true
+    },
+    tooltip: {
+      enabled: false
+    }
+  }
+}
+
+Chart.register(gaugeChart);
+
 // Setup Chart.js
 Chart.defaults.font.size = 16;
-let cpuUsageCanvas = document.getElementById('cpuChart').getContext('2d')
-let memoryUsageCanvas = document.getElementById('memoryChart').getContext('2d')
-let cpuTemperatureCanvas = document.getElementById('cpuTemperatureChart').getContext('2d')
-let cpuUsageChart = new Chart(cpuUsageCanvas, {
-  type: 'line', // Change to the type of chart you need
+const cpuUsageCanvas = document.getElementById('cpuUsageChart').getContext('2d')
+const memoryUsageCanvas = document.getElementById('memoryUsageChart').getContext('2d')
+const cpuTemperatureCanvas = document.getElementById('cpuTemperatureChart').getContext('2d')
+const cpuUsageGaugeCanvas = document.getElementById('cpuUsageGauge').getContext('2d')
+const memoryUsageGaugeCanvas = document.getElementById('memoryUsageGauge').getContext('2d')
+const cpuTemperatureGaugeCanvas = document.getElementById('cpuTemperatureGauge').getContext('2d')
+const cpuUsageChart = new Chart(cpuUsageCanvas, {
+  type: 'line', 
   data: {
-    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 
     datasets: [{
       label: 'Cpu Usage %',
-      data: [], // Initialize with empty data
+      data: [0,0,0,0,0,0,0,0,0,0],
       backgroundColor: 'rgba(75, 192, 192, 0.2)',
       borderColor: 'rgba(75, 192, 192, 1)',
       borderWidth: 2
@@ -98,13 +144,13 @@ let cpuUsageChart = new Chart(cpuUsageCanvas, {
   }
 })
 
-let memoryUsageChart = new Chart(memoryUsageCanvas, {
-  type: 'line', // Change to the type of chart you need
+const memoryUsageChart = new Chart(memoryUsageCanvas, {
+  type: 'line',
   data: {
-    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     datasets: [{
       label: 'Memory Usage %',
-      data: [], // Initialize with empty data
+      data: [],
       backgroundColor: 'rgba(75, 192, 192, 0.2)',
       borderColor: 'rgba(75, 192, 192, 1)',
       borderWidth: 2
@@ -121,15 +167,15 @@ let memoryUsageChart = new Chart(memoryUsageCanvas, {
   }
 })
 
-let cpuTemperatureChart = new Chart(cpuTemperatureCanvas, {
-  type: 'line', // Change to the type of chart you need
+const cpuTemperatureChart = new Chart(cpuTemperatureCanvas, {
+  type: 'line',
   data: {
-    labels: [0,1,2,3,4,5,6,7,8,9], // Initialize with empty labels
+    labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
     datasets: [{
       label: 'CPU Temperature C°',
-      data: [], // Initialize with empty data
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      borderColor: 'rgba(75, 192, 192, 1)',
+      data: [],
+      backgroundColor: 'rgba(220, 95, 0, 0.7)',
+      borderColor: 'rgba(220, 95, 0, 0.6)',
       borderWidth: 2
     }]
   },
@@ -144,18 +190,63 @@ let cpuTemperatureChart = new Chart(cpuTemperatureCanvas, {
   }
 })
 
+const cpuUsageGauge = new Chart(cpuUsageGaugeCanvas, {
+  type: 'gauge',
+  data: {
+    datasets: [{
+      label: 'CPU Usage %',
+      data: [0, 100],
+      backgroundColor: [
+        'rgba(220, 95, 0, 1)',
+        'rgba(104, 109, 118, 0.5)'
+      ],
+      unit: '%'
+    }]
+  }
+})
+
+const memoryUsageGauge = new Chart(memoryUsageGaugeCanvas, {
+  type: 'gauge',
+  data: {
+    datasets: [{
+      label: 'Memory Usage %',
+      data: [0, 100],
+      backgroundColor: [
+        'rgba(220, 95, 0, 1)',
+        'rgba(104, 109, 118, 0.5)'
+      ],
+      unit: '%'
+    }]
+  }
+})
+
+const cpuTemperatureGauge = new Chart(cpuTemperatureGaugeCanvas, {
+  type: 'gauge',
+  data: {
+    datasets: [{
+      label: 'CPU Temperature C°',
+      data: [0, 100],
+      backgroundColor: [
+        'rgba(220, 95, 0, 1)',
+        'rgba(104, 109, 118, 0.5)'
+      ],
+      unit: '°'
+    }]
+  }
+})
+
 // Function to update chart with new data
 function updateChart(newData, chart) {
   let data = chart.data.datasets[0].data
   data.push(newData)
-  if(data.length > 10) {
+  if (data.length > 10) {
     data.shift()
   }
   chart.update()
 }
 
-class circularChart extends Chart.DoughnutController {
-  draw() {
-    super.draw(arguments);
-  }
+// Function to update gauge with new data
+function updateGauge(newData, gauge) {
+  gauge.data.datasets[0].data = [newData, 100 - newData];
+  gauge.update();
 }
