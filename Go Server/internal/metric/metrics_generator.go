@@ -1,4 +1,4 @@
-package main
+package metric
 
 import (
 	"math/rand"
@@ -17,7 +17,7 @@ var (
 	metricsMutex sync.Mutex
 )
 
-func generateMetrics() {
+func GenerateMetrics() {
 	for {
 		metricsMutex.Lock()
 		metrics.CpuUsage = rand.Intn(100)
@@ -28,7 +28,7 @@ func generateMetrics() {
 	}
 }
 
-func getMetrics() Metrics {
+func GetMetrics() Metrics {
 	metricsMutex.Lock()
 	defer metricsMutex.Unlock()
 	return metrics

@@ -2,13 +2,29 @@
 package main
 
 import (
+	"cactus/internal/metric"
+	"cactus/internal/mysql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
 func main() {
-	go generateMetrics()
+	db, err := mysql.NewMysqlConnection(mysql.MysqlConfig{
+		Username: "user",
+		Password: "password",
+		DbName:   "db",
+		Port:     3306,
+		Host:     "localhost",
+	})
+	if err != nil {
+		log.Fatalf("error on creating connection with database: #{err}")
+	}
+
+	metric.InitMetricTypes(db)
+
+	go metric.GenerateMetrics()
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/metrics", metricsHandler)
@@ -20,7 +36,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func metricsHandler(w http.ResponseWriter, r *http.Request) {
-	metrics := getMetrics()
+	metrics := metric.GetMetrics()
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(metrics); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
