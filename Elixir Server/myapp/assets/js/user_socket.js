@@ -59,7 +59,6 @@ socket.connect()
 // subtopic is its id - in this case 42:
 let channel = socket.channel("metrics:lobby", {})
 channel.on("new_data", payload => {
-  console.log("Received new data:", payload)
   updateChart(payload['cpu_usage'], cpuUsageChart)
   updateChart(payload['memory_usage'], memoryUsageChart)
   updateChart(payload['cpu_temperature'], cpuTemperatureChart)
@@ -98,7 +97,6 @@ gaugeChart.defaults = {
   circumference: 180,
   rotation: 270,
 };
-console.log(gaugeChart.overrides);
 gaugeChart.overrides = {
   aspectRatio: 1.5,
   plugins: {
